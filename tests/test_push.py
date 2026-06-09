@@ -1,0 +1,60 @@
+import pytest
+from unittest.mock import Mock, patch
+from datetime import datetime
+from src.push.base import BasePusher
+from src.push.feishu import FeishuPusher
+from src.fetcher import Item
+
+def test_base_pusher_interface():
+    """测试基类接口"""
+    pusher = BasePusher()
+    with pytest.raises(NotImplementedError):
+        pusher.push([])
+
+def test_feishu_pusher_init():
+    """测试飞书推送器初始化"""
+    pusher = FeishuPusher(
+        webhook_url="https://open.feishu.cn/open-apis/bot/v2/hook/test"
+    )
+    assert pusher.webhook_url == "https://open.feishu.cn/open-apis/bot/v2/hook/test"
+
+@patch('requests.post')
+def test_feishu_push_success(mock_post):
+    """测试飞书推送成功"""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"code": 0, "msg": "success"}
+    mock_post.return_value = mock_response
+
+    pusher = FeishuPusher(webhook_url="https://test.webhook.com")
+    items = [
+        Item(id="item-1", title="标题1", url="https://example.com",
+             summary="摘要1", category="分类1", source="Twitter",
+             published_at=datetime.now())
+    ]
+
+    result = pusher.push(items)
+    assert result is True
+
+@patch('requests.post')
+def test_feishu_push_failure(mock_post):
+    """测试飞书推送失败"""
+    mock_response = Mock()
+    mock_response.status_code = 500
+    mock_post.return_value = mock_response
+
+    pusher = FeishuPusher(webhook_url="https://test.webhook.com")
+    items = [
+        Item(id="item-1", title="标题1", url="https://example.com",
+             summary="摘要1", category="分类1", source="Twitter",
+             published_at=datetime.now())
+    ]
+
+    result = pusher.push(items)
+    assert result is False
+
+def test_feishu_push_empty_items():
+    """测试推送空列表"""
+    pusher = FeishuPusher(webhook_url="https://test.webhook.com")
+    result = pusher.push([])
+    assert result is True
