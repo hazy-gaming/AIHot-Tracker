@@ -1,0 +1,43 @@
+# 目标网站配置
+source:
+  api_url: "https://aihot.virxact.com/api/public/items"
+  default_mode: "selected"
+  default_category: null
+
+# 轮询配置
+polling:
+  base_interval: 300
+  min_interval: 60
+  max_interval: 900
+  empty_threshold: 3
+  work_hours:
+    start: 9
+    end: 18
+    interval: 300
+  off_hours_interval: 900
+
+# 推送配置
+push:
+  channels:
+    feishu:
+      enabled: true
+      webhook_url: "${FEISHU_WEBHOOK_URL}"
+      secret: "${FEISHU_WEBHOOK_SECRET}"
+    wechat:
+      enabled: false
+      webhook_url: ""
+
+# 消息配置
+message:
+  max_items_per_message: 10
+  merge_threshold: 3
+  include_summary: true
+  include_source: true
+  include_category: true
+
+# 存储配置
+storage:
+  db_path: "./data/aihot_tracker.db"
+  log_path: "./logs/aihot_tracker.log"
+  backup_enabled: true
+  backup_interval_days: 7
