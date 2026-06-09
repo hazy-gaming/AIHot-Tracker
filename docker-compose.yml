@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  aihot-tracker:
+    build: .
+    container_name: aihot-tracker
+    restart: unless-stopped
+    environment:
+      - FEISHU_WEBHOOK_URL=${FEISHU_WEBHOOK_URL}
+      - FEISHU_WEBHOOK_SECRET=${FEISHU_WEBHOOK_SECRET}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config
+    ports:
+      - "8080:8080"
