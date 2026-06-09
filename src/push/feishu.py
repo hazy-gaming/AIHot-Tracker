@@ -1,3 +1,7 @@
+import time
+import hashlib
+import hmac
+import base64
 import requests
 from typing import List
 from src.push.base import BasePusher
@@ -12,6 +16,15 @@ class FeishuPusher(BasePusher):
         self.secret = secret
         self.formatter = Formatter()
 
+    def _generate_sign(self, timestamp: str) -> str:
+        """生成飞书签名"""
+        string_to_sign = f"{timestamp}\n{self.secret}"
+        hmac_code = hmac.new(
+            string_to_sign.encode("utf-8"),
+            digestmod=hashlib.sha256
+        ).digest()
+        return base64.b64encode(hmac_code).decode("utf-8")
+
     def push(self, items: List[Item]) -> bool:
         """推送到飞书"""
         if not items:
@@ -21,6 +34,13 @@ class FeishuPusher(BasePusher):
             message = self.formatter.format_multiple_items(items)
             if message is None:
                 return True
+
+            # 添加签名（如果配置了 secret）
+            if self.secret:
+                timestamp = str(int(time.time()))
+                sign = self._generate_sign(timestamp)
+                message["timestamp"] = timestamp
+                message["sign"] = sign
 
             response = requests.post(
                 self.webhook_url,

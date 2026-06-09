@@ -60,6 +60,10 @@ def run_once(config: Config, db: Database):
 
     # 推送
     if new_items:
+        if not config.feishu_enabled:
+            logger.warning("飞书推送已禁用，跳过推送")
+            return len(new_items)
+
         pusher = FeishuPusher(
             webhook_url=config.feishu_webhook_url,
             secret=config.feishu_webhook_secret
@@ -77,9 +81,13 @@ def run_once(config: Config, db: Database):
             # 重置连续空轮询计数
             db.update_consecutive_empty(0)
             db.update_last_new_item_time(datetime.now())
+
+            # 推送成功时更新轮询时间
+            db.update_poll_state(datetime.now())
         else:
             logger.error("推送失败")
             db.log_push("feishu", "failed", error_message="推送失败", items_count=0)
+            # 推送失败时不更新轮询时间，保留原始时间以便重试
     else:
         logger.info("没有新条目")
         consecutive_empty = db.get_consecutive_empty() + 1
@@ -92,8 +100,8 @@ def run_once(config: Config, db: Database):
             db.update_current_interval(new_interval)
             logger.info(f"连续 {consecutive_empty} 次空轮询，调整间隔为 {new_interval} 秒")
 
-    # 更新轮询时间
-    db.update_poll_state(datetime.now())
+        # 没有新条目时更新轮询时间
+        db.update_poll_state(datetime.now())
 
     return len(new_items)
 
