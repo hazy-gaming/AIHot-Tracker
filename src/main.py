@@ -115,6 +115,7 @@ def run_scheduler(config: Config, db: Database):
     """运行调度器"""
     logger = logging.getLogger(__name__)
     logger.info("启动调度器")
+    logger.info("按 Ctrl+C 停止服务")
 
     running = True
 
@@ -123,9 +124,11 @@ def run_scheduler(config: Config, db: Database):
         logger.info("收到停止信号，正在退出...")
         running = False
 
+    # 注册信号处理器
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
+    # 使用短间隔循环，以便更快响应停止信号
     while running:
         try:
             # 检查工作时间
@@ -141,8 +144,10 @@ def run_scheduler(config: Config, db: Database):
 
             logger.info(f"下次轮询在 {interval} 秒后")
 
-            # 等待
-            time.sleep(interval)
+            # 分段等待，每秒检查一次是否需要退出
+            wait_start = time.time()
+            while running and (time.time() - wait_start) < interval:
+                time.sleep(1)  # 每秒检查一次
 
             if not running:
                 break
@@ -152,7 +157,7 @@ def run_scheduler(config: Config, db: Database):
 
         except Exception as e:
             logger.error(f"轮询出错: {e}")
-            time.sleep(60)
+            time.sleep(10)
 
     logger.info("调度器已停止")
 
