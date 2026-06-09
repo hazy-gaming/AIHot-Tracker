@@ -19,14 +19,15 @@ class Item:
 class Fetcher:
     """AIHOT API 客户端"""
 
-    def __init__(self, api_url: str):
+    def __init__(self, api_url: str, mode: str = "selected"):
         self.api_url = api_url
+        self.mode = mode
 
     def fetch_items(self, since: datetime) -> List[Item]:
         """获取指定时间之后的条目"""
         try:
             params = {
-                "mode": "selected",
+                "mode": self.mode,
                 "since": since.isoformat()
             }
 

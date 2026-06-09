@@ -49,7 +49,7 @@ def run_once(config: Config, db: Database):
     logger.info(f"开始轮询，上次轮询时间: {last_poll}")
 
     # 获取新条目
-    fetcher = Fetcher(config.source_api_url)
+    fetcher = Fetcher(config.source_api_url, config.source_default_mode)
     items = fetcher.fetch_items(since=last_poll)
     logger.info(f"获取到 {len(items)} 个条目")
 
