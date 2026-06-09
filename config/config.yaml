@@ -1,6 +1,7 @@
 # 目标网站配置
 source:
   api_url: "https://aihot.virxact.com/api/public/items"
+  rss_url: "https://aihot.virxact.com/feed.xml"  # RSS 源（更实时）
   default_mode: "selected"
   default_category: null
 

@@ -22,6 +22,10 @@ class Config:
             'https://aihot.virxact.com/api/public/items')
 
     @property
+    def rss_url(self) -> Optional[str]:
+        return self._config.get('source', {}).get('rss_url')
+
+    @property
     def source_default_mode(self) -> str:
         return self._config.get('source', {}).get('default_mode', 'selected')
 

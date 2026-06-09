@@ -10,6 +10,7 @@ from pathlib import Path
 from src.config import Config
 from src.database import Database
 from src.fetcher import Fetcher
+from src.rss_fetcher import RSSFetcher
 from src.dedup import DedupManager
 from src.formatter import Formatter
 from src.push.feishu import FeishuPusher
@@ -48,10 +49,15 @@ def run_once(config: Config, db: Database):
 
     logger.info(f"开始轮询，上次轮询时间: {last_poll}")
 
-    # 获取新条目
-    fetcher = Fetcher(config.source_api_url, config.source_default_mode)
-    items = fetcher.fetch_items(since=last_poll)
-    logger.info(f"获取到 {len(items)} 个条目")
+    # 获取新条目（优先使用 RSS，更实时）
+    if config.rss_url:
+        fetcher = RSSFetcher(config.rss_url)
+        items = fetcher.fetch_items(since=last_poll)
+        logger.info(f"通过 RSS 获取到 {len(items)} 个条目")
+    else:
+        fetcher = Fetcher(config.source_api_url, config.source_default_mode)
+        items = fetcher.fetch_items(since=last_poll)
+        logger.info(f"通过 API 获取到 {len(items)} 个条目")
 
     # 去重
     dedup = DedupManager(db)
