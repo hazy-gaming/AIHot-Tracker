@@ -23,7 +23,13 @@ class Fetcher:
     """AIHOT API 客户端"""
 
     HEADERS = {
-        "User-Agent": "AIHOT-Tracker/1.0"
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/125.0 Safari/537.36"
+        ),
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://aihot.virxact.com/"
     }
 
     def __init__(self, api_url: str, mode: str = "selected"):
@@ -51,8 +57,8 @@ class Fetcher:
 
             for item_data in data.get("items", []):
                 try:
-                    # 只处理精选条目（selected=True）
-                    if not item_data.get("selected", False):
+                    # all 模式返回混合列表，仍需要二次过滤精选项；selected 模式由 API 保证范围。
+                    if self.mode != "selected" and not item_data.get("selected", False):
                         continue
 
                     # API 返回 publishedAt（驼峰），兼容 published_at（下划线）

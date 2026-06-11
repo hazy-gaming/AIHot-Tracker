@@ -2,7 +2,7 @@
 source:
   api_url: "https://aihot.virxact.com/api/public/items"
   rss_url: null  # 禁用 RSS，使用 API（字段更完整）
-  default_mode: "all"  # 使用 all 模式，通过 selected 字段过滤精选内容
+  default_mode: "selected"  # 使用精选模式，与网站精选页保持一致
   default_category: null
 
 # 轮询配置

@@ -85,7 +85,11 @@ def run_once(config: Config, db: Database, dedup: DedupManager, fetcher=None):
 
         pusher = FeishuPusher(
             webhook_url=webhook_url,
-            secret=config.feishu_webhook_secret
+            secret=config.feishu_webhook_secret,
+            include_summary=config.message_include_summary,
+            include_source=config.message_include_source,
+            include_category=config.message_include_category,
+            max_items=config.message_max_items
         )
 
         success = pusher.push(new_items)

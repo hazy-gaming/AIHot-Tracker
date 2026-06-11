@@ -12,12 +12,20 @@ class Formatter:
         self.include_category = include_category
         self.max_items = max_items
 
+    def _clean_text(self, value: str) -> str:
+        """清理飞书 Markdown 文本中的异常空白。"""
+        return str(value).replace("\r\n", "\n").replace("\r", "\n").strip()
+
+    def _escape_link_text(self, value: str) -> str:
+        """转义 Markdown 链接文本，避免标题中的方括号破坏链接。"""
+        return self._clean_text(value).replace("[", "\\[").replace("]", "\\]")
+
     def format_single_item(self, item: Item) -> Dict[str, Any]:
         """格式化单个条目为飞书卡片"""
         elements = []
 
         # 标题
-        title_content = f"**标题**\n[{item.title}]({item.url})"
+        title_content = f"**标题**\n[{self._escape_link_text(item.title)}]({item.url})"
         elements.append({
             "tag": "div",
             "text": {"tag": "lark_md", "content": title_content}
@@ -26,9 +34,9 @@ class Formatter:
         # 来源和分类
         meta_parts = []
         if self.include_source and item.source:
-            meta_parts.append(f"**来源** | {item.source}")
+            meta_parts.append(f"**来源** | {self._clean_text(item.source)}")
         if self.include_category and item.category:
-            meta_parts.append(f"**分类** | {item.category}")
+            meta_parts.append(f"**分类** | {self._clean_text(item.category)}")
 
         if meta_parts:
             elements.append({
@@ -38,7 +46,7 @@ class Formatter:
 
         # 摘要
         if self.include_summary and item.summary:
-            summary_content = f"**摘要**\n{item.summary}"
+            summary_content = f"**摘要**\n{self._clean_text(item.summary)}"
             elements.append({
                 "tag": "div",
                 "text": {"tag": "lark_md", "content": summary_content}
@@ -84,12 +92,25 @@ class Formatter:
 
         # 每条内容
         for i, item in enumerate(items[:self.max_items], 1):
-            content = f"**{i}.** [{item.title}]({item.url})"
+            content_parts = [
+                f"**{i}.** [{self._escape_link_text(item.title)}]({item.url})"
+            ]
+
+            meta_parts = []
             if self.include_source and item.source:
-                content += f" ({item.source})"
+                meta_parts.append(f"来源: {self._clean_text(item.source)}")
+            if self.include_category and item.category:
+                meta_parts.append(f"分类: {self._clean_text(item.category)}")
+            meta_parts.append(f"时间: {item.published_at.strftime('%Y-%m-%d %H:%M')}")
+
+            if meta_parts:
+                content_parts.append(" | ".join(meta_parts))
+            if self.include_summary and item.summary:
+                content_parts.append(self._clean_text(item.summary))
+
             elements.append({
                 "tag": "div",
-                "text": {"tag": "lark_md", "content": content}
+                "text": {"tag": "lark_md", "content": "\n".join(content_parts)}
             })
 
         if len(items) > self.max_items:

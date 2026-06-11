@@ -11,10 +11,17 @@ from src.formatter import Formatter
 class FeishuPusher(BasePusher):
     """飞书推送器"""
 
-    def __init__(self, webhook_url: str, secret: str = ""):
+    def __init__(self, webhook_url: str, secret: str = "",
+                 include_summary: bool = True, include_source: bool = True,
+                 include_category: bool = True, max_items: int = 10):
         self.webhook_url = webhook_url
         self.secret = secret
-        self.formatter = Formatter()
+        self.formatter = Formatter(
+            include_summary=include_summary,
+            include_source=include_source,
+            include_category=include_category,
+            max_items=max_items
+        )
 
     def _generate_sign(self, timestamp: str) -> str:
         """生成飞书签名"""
