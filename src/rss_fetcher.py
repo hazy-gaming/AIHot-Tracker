@@ -1,12 +1,19 @@
+import logging
 import requests
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from src.fetcher import Item
+
+logger = logging.getLogger(__name__)
 
 
 class RSSFetcher:
     """RSS 抓取器"""
+
+    HEADERS = {
+        "User-Agent": "AIHOT-Tracker/1.0"
+    }
 
     def __init__(self, rss_url: str):
         self.rss_url = rss_url
@@ -14,8 +21,9 @@ class RSSFetcher:
     def fetch_items(self, since: Optional[datetime] = None) -> List[Item]:
         """获取 RSS 中的条目"""
         try:
-            response = requests.get(self.rss_url, timeout=30)
+            response = requests.get(self.rss_url, headers=self.HEADERS, timeout=30)
             if response.status_code != 200:
+                logger.warning(f"RSS 返回非 200 状态码: {response.status_code}")
                 return []
 
             # 解析 XML
@@ -40,9 +48,10 @@ class RSSFetcher:
                                 pub_date_str, '%a, %d %b %Y %H:%M:%S %Z'
                             )
                         except ValueError:
-                            pub_date = datetime.utcnow()
+                            logger.debug(f"无法解析 RSS 日期: {pub_date_str}")
+                            pub_date = datetime.now(timezone.utc)
                     else:
-                        pub_date = datetime.utcnow()
+                        pub_date = datetime.now(timezone.utc)
 
                     # 过滤时间
                     if since and pub_date < since:
@@ -67,10 +76,12 @@ class RSSFetcher:
                     )
                     items.append(item)
 
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"解析 RSS 条目失败: {e}")
                     continue
 
             return items
 
-        except Exception:
+        except Exception as e:
+            logger.error(f"获取 RSS 条目失败: {e}")
             return []

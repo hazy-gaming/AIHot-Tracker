@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from src.formatter import Formatter
 from src.fetcher import Item
 
@@ -31,10 +31,10 @@ def test_format_multiple_items(formatter):
     items = [
         Item(id="item-1", title="标题1", url="https://example.com/1",
              summary="摘要1", category="分类1", source="Twitter",
-             published_at=datetime.now()),
+             published_at=datetime.now(timezone.utc)),
         Item(id="item-2", title="标题2", url="https://example.com/2",
              summary="摘要2", category="分类2", source="RSS",
-             published_at=datetime.now()),
+             published_at=datetime.now(timezone.utc)),
     ]
 
     message = formatter.format_multiple_items(items)
@@ -58,7 +58,7 @@ def test_format_summary_disabled():
         summary="测试摘要",
         category="测试分类",
         source="Twitter",
-        published_at=datetime.now()
+        published_at=datetime.now(timezone.utc)
     )
 
     card = formatter.format_single_item(item)

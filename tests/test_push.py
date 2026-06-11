@@ -1,15 +1,29 @@
 import pytest
 from unittest.mock import Mock, patch
-from datetime import datetime
+from datetime import datetime, timezone
 from src.push.base import BasePusher
 from src.push.feishu import FeishuPusher
 from src.fetcher import Item
 
 def test_base_pusher_interface():
-    """测试基类接口"""
-    pusher = BasePusher()
-    with pytest.raises(NotImplementedError):
-        pusher.push([])
+    """测试基类接口 - 无法直接实例化抽象类"""
+    with pytest.raises(TypeError):
+        BasePusher()
+
+    # 未实现 push 方法的子类也无法实例化
+    class IncompletePusher(BasePusher):
+        pass
+
+    with pytest.raises(TypeError):
+        IncompletePusher()
+
+    # 实现了 push 方法的子类可以实例化
+    class CompletePusher(BasePusher):
+        def push(self, items):
+            return True
+
+    pusher = CompletePusher()
+    assert pusher.push([]) is True
 
 def test_feishu_pusher_init():
     """测试飞书推送器初始化"""
@@ -30,7 +44,7 @@ def test_feishu_push_success(mock_post):
     items = [
         Item(id="item-1", title="标题1", url="https://example.com",
              summary="摘要1", category="分类1", source="Twitter",
-             published_at=datetime.now())
+             published_at=datetime.now(timezone.utc))
     ]
 
     result = pusher.push(items)
@@ -47,7 +61,7 @@ def test_feishu_push_failure(mock_post):
     items = [
         Item(id="item-1", title="标题1", url="https://example.com",
              summary="摘要1", category="分类1", source="Twitter",
-             published_at=datetime.now())
+             published_at=datetime.now(timezone.utc))
     ]
 
     result = pusher.push(items)

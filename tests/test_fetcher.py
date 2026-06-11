@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, patch
 from src.fetcher import Fetcher, Item
 
@@ -12,7 +12,7 @@ def test_item_creation():
         summary="测试摘要",
         category="测试分类",
         source="Twitter",
-        published_at=datetime.now()
+        published_at=datetime.now(timezone.utc)
     )
     assert item.id == "test-123"
     assert item.title == "测试标题"
@@ -36,7 +36,8 @@ def test_fetch_items_success(mock_get):
                 "summary": "摘要1",
                 "category": "分类1",
                 "source": "Twitter",
-                "published_at": "2026-06-10T14:30:00Z"
+                "published_at": "2026-06-10T14:30:00Z",
+                "selected": True
             }
         ],
         "total": 1,
@@ -45,7 +46,7 @@ def test_fetch_items_success(mock_get):
     mock_get.return_value = mock_response
 
     fetcher = Fetcher(api_url="https://api.test.com/items")
-    since = datetime.now() - timedelta(minutes=5)
+    since = datetime.now(timezone.utc) - timedelta(minutes=5)
     items = fetcher.fetch_items(since=since)
 
     assert len(items) == 1
@@ -65,7 +66,7 @@ def test_fetch_items_empty(mock_get):
     mock_get.return_value = mock_response
 
     fetcher = Fetcher(api_url="https://api.test.com/items")
-    since = datetime.now() - timedelta(minutes=5)
+    since = datetime.now(timezone.utc) - timedelta(minutes=5)
     items = fetcher.fetch_items(since=since)
 
     assert len(items) == 0
@@ -76,7 +77,7 @@ def test_fetch_items_network_error(mock_get):
     mock_get.side_effect = Exception("网络错误")
 
     fetcher = Fetcher(api_url="https://api.test.com/items")
-    since = datetime.now() - timedelta(minutes=5)
+    since = datetime.now(timezone.utc) - timedelta(minutes=5)
     items = fetcher.fetch_items(since=since)
 
     assert len(items) == 0
@@ -89,7 +90,7 @@ def test_fetch_items_api_error(mock_get):
     mock_get.return_value = mock_response
 
     fetcher = Fetcher(api_url="https://api.test.com/items")
-    since = datetime.now() - timedelta(minutes=5)
+    since = datetime.now(timezone.utc) - timedelta(minutes=5)
     items = fetcher.fetch_items(since=since)
 
     assert len(items) == 0

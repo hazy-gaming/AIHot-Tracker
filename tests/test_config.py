@@ -1,12 +1,24 @@
-import os
 import pytest
 from src.config import Config
 
-def test_config_load_default():
+@pytest.fixture
+def default_config(tmp_path):
+    """创建默认测试配置"""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text("""
+source:
+  api_url: "https://aihot.virxact.com/api/public/items"
+polling:
+  base_interval: 300
+  min_interval: 60
+  max_interval: 900
+""")
+    return Config(config_path=str(config_file))
+
+def test_config_load_default(default_config):
     """测试默认配置加载"""
-    config = Config()
-    assert config.source_api_url == "https://aihot.virxact.com/api/public/items"
-    assert config.polling_base_interval == 300
+    assert default_config.source_api_url == "https://aihot.virxact.com/api/public/items"
+    assert default_config.polling_base_interval == 300
 
 def test_config_load_from_file(tmp_path):
     """测试从文件加载配置"""
@@ -26,9 +38,8 @@ def test_config_env_override(monkeypatch):
     config = Config()
     assert config.feishu_webhook_url == "https://custom.webhook.com"
 
-def test_config_polling_interval():
+def test_config_polling_interval(default_config):
     """测试轮询间隔配置"""
-    config = Config()
-    assert config.polling_base_interval == 300
-    assert config.polling_min_interval == 60
-    assert config.polling_max_interval == 900
+    assert default_config.polling_base_interval == 300
+    assert default_config.polling_min_interval == 60
+    assert default_config.polling_max_interval == 900

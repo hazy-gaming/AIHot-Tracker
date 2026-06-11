@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   aihot-tracker:
     build: .
@@ -12,5 +10,3 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./config:/app/config
-    ports:
-      - "8080:8080"

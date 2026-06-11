@@ -6,10 +6,11 @@ class Formatter:
     """消息格式化器"""
 
     def __init__(self, include_summary: bool = True, include_source: bool = True,
-                 include_category: bool = True):
+                 include_category: bool = True, max_items: int = 10):
         self.include_summary = include_summary
         self.include_source = include_source
         self.include_category = include_category
+        self.max_items = max_items
 
     def format_single_item(self, item: Item) -> Dict[str, Any]:
         """格式化单个条目为飞书卡片"""
@@ -82,7 +83,7 @@ class Formatter:
         })
 
         # 每条内容
-        for i, item in enumerate(items[:10], 1):
+        for i, item in enumerate(items[:self.max_items], 1):
             content = f"**{i}.** [{item.title}]({item.url})"
             if self.include_source and item.source:
                 content += f" ({item.source})"
@@ -91,10 +92,10 @@ class Formatter:
                 "text": {"tag": "lark_md", "content": content}
             })
 
-        if len(items) > 10:
+        if len(items) > self.max_items:
             elements.append({
                 "tag": "div",
-                "text": {"tag": "lark_md", "content": f"... 还有 {len(items) - 10} 条，请查看网站"}
+                "text": {"tag": "lark_md", "content": f"... 还有 {len(items) - self.max_items} 条，请查看网站"}
             })
 
         # 分隔线

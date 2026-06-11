@@ -1,13 +1,15 @@
 import os
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from src.database import Database
 
 @pytest.fixture
 def db(tmp_path):
     """创建测试数据库"""
     db_path = tmp_path / "test.db"
-    return Database(str(db_path))
+    database = Database(str(db_path))
+    yield database
+    database.close()
 
 def test_database_init(db):
     """测试数据库初始化"""
@@ -42,7 +44,7 @@ def test_get_last_poll_time(db):
     last_poll = db.get_last_poll_time()
     assert last_poll is None  # 初始状态
 
-    db.update_poll_state(datetime.now())
+    db.update_poll_state(datetime.now(timezone.utc))
     last_poll = db.get_last_poll_time()
     assert last_poll is not None
 
