@@ -4,6 +4,7 @@ services:
     container_name: aihot-tracker
     restart: unless-stopped
     environment:
+      - TZ=Asia/Shanghai
       - FEISHU_WEBHOOK_URL=${FEISHU_WEBHOOK_URL}
       - FEISHU_WEBHOOK_SECRET=${FEISHU_WEBHOOK_SECRET}
     volumes:
