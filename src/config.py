@@ -123,11 +123,13 @@ class Config:
 
     @property
     def bitable_app_token(self) -> str:
-        return self._config.get('bitable', {}).get('app_token', '')
+        return os.getenv('BITABLE_APP_TOKEN',
+            self._config.get('bitable', {}).get('app_token', ''))
 
     @property
     def bitable_table_id(self) -> str:
-        return self._config.get('bitable', {}).get('table_id', '')
+        return os.getenv('BITABLE_TABLE_ID',
+            self._config.get('bitable', {}).get('table_id', ''))
 
     @property
     def bitable_field_mapping(self) -> Optional[dict]:

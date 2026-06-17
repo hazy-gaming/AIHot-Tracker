@@ -7,6 +7,8 @@ services:
       - TZ=Asia/Shanghai
       - FEISHU_WEBHOOK_URL=${FEISHU_WEBHOOK_URL}
       - FEISHU_WEBHOOK_SECRET=${FEISHU_WEBHOOK_SECRET}
+      - BITABLE_APP_TOKEN=${BITABLE_APP_TOKEN}
+      - BITABLE_TABLE_ID=${BITABLE_TABLE_ID}
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs

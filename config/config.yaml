@@ -45,11 +45,11 @@ storage:
 
 # 飞书多维表格配置
 bitable:
-  enabled: false
+  enabled: true
   app_id: "${BITABLE_APP_ID}"
   app_secret: "${BITABLE_APP_SECRET}"
-  app_token: ""    # 多维表格 app_token，从表格 URL 中获取
-  table_id: ""     # 数据表 table_id，从表格 URL 中获取
+  app_token: "${BITABLE_APP_TOKEN}"    # 多维表格 app_token，从表格 URL 中获取
+  table_id: "${BITABLE_TABLE_ID}"     # 数据表 table_id，从表格 URL 中获取
   field_mapping:   # Item 属性 → 多维表格字段名
     title: "标题"
     url: "链接"
