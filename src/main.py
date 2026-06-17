@@ -13,6 +13,7 @@ from src.fetcher import Fetcher
 from src.rss_fetcher import RSSFetcher
 from src.dedup import DedupManager
 from src.push.feishu import FeishuPusher
+from src.push.feishu_bitable import FeishuBitableWriter
 
 def setup_logging(log_path: str):
     """设置日志（带轮转）"""
@@ -96,6 +97,23 @@ def run_once(config: Config, db: Database, dedup: DedupManager, fetcher=None):
         if success:
             logger.info(f"推送成功: {len(new_items)} 个条目")
             db.log_push("feishu", "success", items_count=len(new_items))
+
+            # 写入飞书多维表格
+            if config.bitable_enabled:
+                try:
+                    bitable_writer = FeishuBitableWriter(
+                        app_id=config.bitable_app_id,
+                        app_secret=config.bitable_app_secret,
+                        app_token=config.bitable_app_token,
+                        table_id=config.bitable_table_id,
+                        field_mapping=config.bitable_field_mapping,
+                    )
+                    if bitable_writer.write(new_items):
+                        logger.info("多维表格写入成功")
+                    else:
+                        logger.warning("多维表格写入失败，但不影响推送结果")
+                except Exception as e:
+                    logger.error(f"多维表格写入异常: {e}")
 
             # 标记为已推送
             for item in new_items:

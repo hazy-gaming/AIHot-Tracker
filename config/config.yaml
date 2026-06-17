@@ -42,3 +42,18 @@ storage:
   log_path: "./logs/aihot_tracker.log"
   backup_enabled: true
   backup_interval_days: 7
+
+# 飞书多维表格配置
+bitable:
+  enabled: false
+  app_id: "${BITABLE_APP_ID}"
+  app_secret: "${BITABLE_APP_SECRET}"
+  app_token: ""    # 多维表格 app_token，从表格 URL 中获取
+  table_id: ""     # 数据表 table_id，从表格 URL 中获取
+  field_mapping:   # Item 属性 → 多维表格字段名
+    title: "标题"
+    url: "链接"
+    summary: "摘要"
+    category: "分类"
+    source: "来源"
+    published_at: "发布时间"

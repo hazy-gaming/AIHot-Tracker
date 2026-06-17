@@ -106,3 +106,29 @@ class Config:
     @property
     def storage_log_path(self) -> str:
         return self._config.get('storage', {}).get('log_path', './logs/aihot_tracker.log')
+
+    @property
+    def bitable_enabled(self) -> bool:
+        return self._config.get('bitable', {}).get('enabled', False)
+
+    @property
+    def bitable_app_id(self) -> str:
+        return os.getenv('BITABLE_APP_ID',
+            self._config.get('bitable', {}).get('app_id', ''))
+
+    @property
+    def bitable_app_secret(self) -> str:
+        return os.getenv('BITABLE_APP_SECRET',
+            self._config.get('bitable', {}).get('app_secret', ''))
+
+    @property
+    def bitable_app_token(self) -> str:
+        return self._config.get('bitable', {}).get('app_token', '')
+
+    @property
+    def bitable_table_id(self) -> str:
+        return self._config.get('bitable', {}).get('table_id', '')
+
+    @property
+    def bitable_field_mapping(self) -> Optional[dict]:
+        return self._config.get('bitable', {}).get('field_mapping')
