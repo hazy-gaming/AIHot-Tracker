@@ -4,10 +4,14 @@ AI 新闻实时追踪和推送系统，自动从 AIHOT 网站获取最新内容�
 
 ## 功能特性
 
-- ✅ 使用官方 API，合法合规
+- ✅ 使用官方 REST API（OpenAPI 3.1），合法合规
+- ✅ 自动分页，`take=100` + cursor 翻页，不漏数据
+- ✅ ETag 缓存，304 无新内容时不重传，节省 99% 带宽
 - ✅ 智能轮询，近实时推送（最多 1 分钟延迟）
 - ✅ 自动去重，避免重复推送
 - ✅ 美观的飞书消息卡片
+- ✅ 飞书多维表格（Bitable）自动写入
+- ✅ 采集扩展字段：`score`（重要性评分）、`title_en`、`permalink`
 - ✅ 可扩展架构，支持多渠道推送
 - ✅ 支持 Docker 部署
 
@@ -94,33 +98,75 @@ sudo systemctl restart aihot-tracker
 
 配置文件位于 `config/config.yaml`，主要配置项：
 
-- `source`: API 源配置
-- `polling`: 轮询策略配置
-- `push`: 推送渠道配置
-- `message`: 消息格式配置
-- `storage`: 存储配置
+- `source`: API 源配置（端点、模式、分类）
+- `polling`: 轮询策略配置（间隔、工作时间、动态退避）
+- `push`: 推送渠道配置（飞书 Webhook）
+- `message`: 消息格式配置（条目数上限、摘要/来源/分类开关）
+- `storage`: 存储配置（数据库路径、日志路径）
+- `bitable`: 飞书多维表格配置（app_id、app_secret、app_token、table_id、字段映射）
 
-敏感信息（如 Webhook URL）通过环境变量配置，参考 `.env.example`。
+敏感信息通过环境变量配置，参考 `.env.example`：
+
+```bash
+FEISHU_WEBHOOK_URL       # 飞书机器人 Webhook 地址
+FEISHU_WEBHOOK_SECRET    # 飞书签名密钥（可选）
+BITABLE_APP_ID           # 飞书应用 App ID
+BITABLE_APP_SECRET       # 飞书应用 App Secret
+BITABLE_APP_TOKEN        # 多维表格 app_token
+BITABLE_TABLE_ID         # 数据表 table_id
+```
 
 ## 项目结构
 
 ```
-aihot-tracker/
-├── src/                    # 源代码
-│   ├── main.py            # 主程序入口
-│   ├── config.py          # 配置管理
-│   ├── fetcher.py         # API 客户端
-│   ├── dedup.py           # 去重管理器
-│   ├── formatter.py       # 消息格式化器
-│   ├── database.py        # 数据库管理
-│   └── push/              # 推送模块
-│       ├── base.py        # 推送基类
-│       └── feishu.py      # 飞书推送器
-├── config/                # 配置文件
-├── scripts/               # 部署脚本
-├── tests/                 # 测试代码
-└── docs/                  # 文档
+AIHot-Tracker/
+├── src/                        # 源代码
+│   ├── main.py                # 主程序入口 & 调度器
+│   ├── config.py              # 配置管理（YAML + 环境变量）
+│   ├── fetcher.py             # API 客户端（分页 + ETag）
+│   ├── rss_fetcher.py         # RSS 备用数据源
+│   ├── dedup.py               # 去重管理器
+│   ├── formatter.py           # 飞书消息卡片格式化
+│   ├── database.py            # SQLite 数据库管理
+│   └── push/                  # 推送模块
+│       ├── base.py            # 推送基类（抽象）
+│       ├── feishu.py          # 飞书 Webhook 推送
+│       └── feishu_bitable.py  # 飞书多维表格写入
+├── config/                    # 配置文件
+│   └── config.yaml
+├── scripts/                   # 部署脚本
+├── tests/                     # 测试代码
+├── openapi.yaml               # AIHOT 官方 OpenAPI 3.1 规范
+└── docs/                      # 文档
 ```
+
+## API 对接说明
+
+本项目对接 [AIHOT 官方 REST API](https://aihot.virxact.com/agent)，完整 OpenAPI 规范见 `openapi.yaml`。
+
+### 数据字段
+
+从 API 获取的每条新闻包含以下字段：
+
+| 字段 | 类型 | 必有 | 说明 |
+|---|---|---|---|
+| `id` | string | ✅ | 条目唯一 ID（cuid 25 字符） |
+| `title` | string | ✅ | 中文标题 |
+| `url` | string | ✅ | 原文链接 |
+| `source` | string | 可空 | 来源名称（如 "Anthropic Blog"） |
+| `summary` | string | 可空 | 中文摘要 |
+| `category` | string | 可空 | 分类：`ai-models` / `ai-products` / `industry` / `paper` / `tip` |
+| `published_at` | datetime | 可空 | 发布时间（ISO 8601 UTC） |
+| `title_en` | string | 可空 | 英文标题 |
+| `score` | int | 可空 | 重要性评分（0-100，越高越值得读） |
+| `permalink` | string | 可空 | AIHOT 站内永久链接 |
+| `selected` | bool | — | 是否精选（仅分页逻辑内部使用） |
+
+### 分页与缓存
+
+- **分页**：单次最多获取 100 条（`take=100`），自动通过 `cursor` 翻页直到最后一页
+- **ETag 缓存**：首次请求保存响应 `ETag`，后续请求携带 `If-None-Match`；无新内容时 API 返回 304（空 body），节省 99% 带宽
+- **时间窗口**：`since` 参数最早只能到 7 天前，更早会被 API 自动截断
 
 ## 扩展开发
 

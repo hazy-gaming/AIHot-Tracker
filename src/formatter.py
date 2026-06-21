@@ -56,7 +56,10 @@ class Formatter:
         elements.append({"tag": "hr"})
 
         # 时间戳
-        time_str = item.published_at.strftime("%Y-%m-%d %H:%M")
+        if item.published_at:
+            time_str = item.published_at.strftime("%Y-%m-%d %H:%M")
+        else:
+            time_str = "时间未知"
         elements.append({
             "tag": "note",
             "elements": [{"tag": "plain_text", "content": f"来自 AIHOT | {time_str}"}]
@@ -101,7 +104,10 @@ class Formatter:
                 meta_parts.append(f"来源: {self._clean_text(item.source)}")
             if self.include_category and item.category:
                 meta_parts.append(f"分类: {self._clean_text(item.category)}")
-            meta_parts.append(f"时间: {item.published_at.strftime('%Y-%m-%d %H:%M')}")
+            if item.published_at:
+                meta_parts.append(f"时间: {item.published_at.strftime('%Y-%m-%d %H:%M')}")
+            else:
+                meta_parts.append("时间: 未知")
 
             if meta_parts:
                 content_parts.append(" | ".join(meta_parts))
