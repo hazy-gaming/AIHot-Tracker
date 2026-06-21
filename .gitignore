@@ -33,4 +33,6 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
-.CLAUDE.md
+CLAUDE.md
+Rest API 接入 · AI HOT.md
+openapi.yaml
