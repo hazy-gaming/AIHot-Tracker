@@ -64,15 +64,18 @@ class FeishuBitableWriter:
             logger.error(f"获取 tenant_access_token 异常: {e}")
             return None
 
-    def _item_to_fields(self, item: Item) -> Dict[str, str]:
+    def _item_to_fields(self, item: Item) -> Dict:
         """将 Item 转换为多维表格字段"""
         fields = {}
         for item_attr, bitable_field in self.field_mapping.items():
             value = getattr(item, item_attr, None)
             if value is not None:
-                # 时间格式化为字符串
+                # 时间转为毫秒时间戳（飞书日期字段要求）
                 if item_attr == "published_at":
-                    value = value.strftime("%Y-%m-%d %H:%M:%S")
+                    value = int(value.timestamp() * 1000)
+                # URL 字段需要对象格式
+                elif item_attr == "url":
+                    value = {"link": value, "text": item.title or value}
                 fields[bitable_field] = value
         return fields
 
@@ -98,7 +101,7 @@ class FeishuBitableWriter:
             }, timeout=15)
 
             if resp.status_code != 200:
-                logger.error(f"写入多维表格失败: HTTP {resp.status_code}")
+                logger.error(f"写入多维表格失败: HTTP {resp.status_code}, 响应: {resp.text}")
                 return False
 
             data = resp.json()
