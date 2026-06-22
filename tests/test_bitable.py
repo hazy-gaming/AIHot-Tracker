@@ -66,11 +66,11 @@ class TestItemToFields:
         fields = writer._item_to_fields(item)
 
         assert fields["标题"] == "测试标题"
-        assert fields["链接"] == "https://example.com"
+        assert fields["链接"] == {"link": "https://example.com", "text": "测试标题"}
         assert fields["摘要"] == "测试摘要"
         assert fields["分类"] == "AI"
         assert fields["来源"] == "Twitter"
-        assert fields["发布时间"] == "2026-06-10 12:00:00"
+        assert fields["发布时间"] == 1781092800000
 
     def test_custom_mapping(self):
         writer = FeishuBitableWriter(
@@ -80,7 +80,7 @@ class TestItemToFields:
         item = _make_item()
         fields = writer._item_to_fields(item)
 
-        assert fields == {"Name": "测试标题", "Link": "https://example.com"}
+        assert fields == {"Name": "测试标题", "Link": {"link": "https://example.com", "text": "测试标题"}}
 
     def test_none_fields_skipped(self):
         writer = FeishuBitableWriter("id", "secret", "app_t", "tbl_t")
